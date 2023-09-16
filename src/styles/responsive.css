@@ -1,0 +1,23 @@
+@media (max-width: 900px) {
+  ul {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .card {
+    width: 80vw;
+  }
+
+  aside {
+    width: 80vw;
+    height: 350px;
+    margin: 0px auto;
+  }
+}
+
+@media (max-width: 400px) {
+  header {
+    flex-direction: column;
+  }
+}

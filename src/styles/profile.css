@@ -1,0 +1,48 @@
+.profile {
+  z-index: 15;
+  position: fixed;
+  bottom: 5%;
+  left: 5%;
+  width: 86px;
+  height: 128px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: flex-start;
+}
+
+.profbtn {
+  width: 48px;
+  height: 48px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.5s;
+  margin-top: 15px;
+}
+
+.profbtn:hover {
+  cursor: pointer;
+  transform: scale(110%);
+  background-color: gray;
+}
+
+.profmenu {
+  width: 86px;
+  height: 100%;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.profmenu button {
+  background-color: white;
+}
+
+.profmenu button:hover {
+  background-color: whitesmoke;
+}
