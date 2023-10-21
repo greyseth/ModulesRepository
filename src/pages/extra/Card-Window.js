@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import "./styles/styles.css";
-import "./styles/responsive.css";
-import supabase from "./supabase";
-import { ctg } from "./Data";
+import "../../styles/styles.css";
+import "../../styles/responsive.css";
+import supabase from "../../supabase";
+import { ctg } from "../../Data";
 
 function CardWindow({ account, data, setData, cards, setCards }) {
   const [updTitle, setUpdTitle] = useState(data.title);
@@ -76,28 +76,6 @@ function CardWindow({ account, data, setData, cards, setCards }) {
           </div>
         </div>
       </div>
-      {/* <div className="comments">
-        <ul>
-          <li>
-            <p>Username</p>
-            <p>
-              lorem ipsum dolor sit amet amet sit dolor ipsum lorem lorem ipsum
-              dolor sit amet amet sit dolor ipsum lorem
-            </p>
-          </li>
-          <li>
-            <p>Username</p>
-            <p>
-              lorem ipsum dolor sit amet amet sit dolor ipsum lorem lorem ipsum
-              dolor sit amet amet sit dolor ipsum lorem lorem ipsum dolor sit
-              amet amet sit dolor ipsum lorem lorem ipsum dolor sit amet amet
-              sit dolor ipsum lorem
-            </p>
-          </li>
-        </ul>
-        <input type="text" placeholder="Add a comment..."></input>
-      </div>
-      //Coming soon feature (maybe idk) */}
     </div>
   );
 }

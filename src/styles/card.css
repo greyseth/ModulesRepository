@@ -1,0 +1,105 @@
+.card {
+  background: linear-gradient(
+    to top right,
+    rgb(160, 159, 159),
+    rgb(73, 73, 73)
+  );
+  border-radius: 5px;
+  width: 500px;
+  padding: 0px 10px 10px 10px;
+  margin-bottom: 20px;
+}
+
+.card-poster {
+  font-family: "Space Grotesk", sans-serif;
+  height: 15px;
+  color: white;
+}
+
+.card-header {
+  background-color: rgb(167, 165, 165);
+  color: white;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 30px;
+  font-weight: bold;
+  overflow: hidden;
+  padding: 0px 15px;
+  line-height: 0.25;
+  border-radius: 0px 0px 10px 10px;
+  margin-bottom: 20px;
+  box-shadow: 3px 5px 10px rgb(41, 41, 41);
+
+  display: flex;
+  align-items: center;
+
+  transition: 0.5s;
+}
+
+.card-header:hover {
+  cursor: pointer;
+  transform: scale(110%);
+}
+
+.card-header p {
+  line-height: 30px;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.card-desc {
+  display: flex;
+  justify-content: center;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 15px;
+  gap: 12px;
+}
+
+.card-desc p {
+  width: 320px;
+  /* -moz-line-clamp: 3;
+    line-clamp: 3;
+    display: -webkit-box;
+    -wekbit-box-orient: vertical; */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-votes {
+  width: 100%;
+  height: 2rem;
+
+  display: flex;
+  padding: 0px 2%;
+  gap: 2%;
+}
+
+.card-votes button {
+  display: flex;
+  align-items: center;
+  border-radius: 15px;
+  padding: 10px;
+
+  background-color: lightgray;
+  border: none;
+
+  transition: 0.5s;
+}
+
+.card-votes button:not(.pressed):hover {
+  transform: scale(110%);
+}
+
+.card-votes button.pressed {
+  background-color: slategray;
+}
+
+.pressed:hover {
+  cursor: default;
+}
+
+.card-votes button p {
+  font-size: 1rem;
+}

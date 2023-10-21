@@ -1,13 +1,18 @@
 //Lots of functions are called 'facts' since this is a recycle of another project
 
 import { useEffect, useState } from "react";
+import { bake_cookie, read_cookie } from "sfcookies";
+import supabase from "./supabase";
+import { ctg, webHookToken } from "./Data";
+
 import "./styles/styles.css";
 import "./styles/responsive.css";
-import supabase from "./supabase";
-import CardWindow from "./Card-Window";
-import LogForm from "./Account";
-import Profile from "./Profile";
-import { ctg } from "./Data";
+import "./styles/card.css";
+
+import CardWindow from "./pages/extra/Card-Window";
+import LogForm from "./pages/login/Login";
+import Profile from "./pages/extra/Profile";
+import AccountDisplay from "./pages/account/Account";
 
 const isValidUrl = (urlString) => {
   try {
@@ -17,50 +22,81 @@ const isValidUrl = (urlString) => {
   }
 };
 
-//Cookies
-function setCookie(name, value, days) {
-  var expires = "";
-  if (days) {
-    var date = new Date();
-    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-    expires = "; expires=" + date.toUTCString();
-  }
-  document.cookie =
-    name + "=" + (value || "") + expires + "; path=/;SameSite=None";
-}
-
-function getCookie(name) {
-  var nameEQ = name + "=";
-  var ca = document.cookie.split(";");
-  for (var i = 0; i < ca.length; i++) {
-    var c = ca[i];
-    while (c.charAt(0) == " ") c = c.substring(1, c.length);
-    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-  }
-  return null;
-}
-
-function eraseCookie(name) {
-  document.cookie = name + "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-}
-
 function App() {
-  const [hasAccount, setAccount] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [hasAccount, setAccount] = useState(undefined);
+  const [viewAccount, setViewAccount] = useState(undefined);
+  //For when the user is viewing their own profile
+  const [selfAccount, setSelfAccount] = useState(false);
+  const [viewCard, setViewCard] = useState(undefined);
+  const [facts, setFacts] = useState([]);
+  const [votes, setVotes] = useState([]);
 
   const setAcc = async () => {
-    setAccount(getCookie("account"));
+    console.log(read_cookie("account"));
+    if (!hasAccount && read_cookie("account")) {
+      setLoggingIn(() => true);
+
+      const { data: userCheck, error: userCheckError } = await supabase
+        .from("users")
+        .select("id, username, email, bio")
+        .eq("id", read_cookie("account"));
+      if (!userCheckError && userCheck.length > 0) {
+        setAccount((acc) => userCheck[0]);
+      } else {
+        console.log("Not logged in");
+      }
+
+      setLoggingIn(() => false);
+    }
   };
 
   useEffect(() => {
     setAcc();
-
-    //await connect();
   }, []);
+
+  useEffect(() => {
+    if (JSON.stringify(hasAccount) === JSON.stringify(viewAccount))
+      setSelfAccount(true);
+    else setSelfAccount(false);
+  }, [hasAccount, viewAccount]);
 
   return (
     <>
+      {viewCard ? (
+        <CardWindow
+          account={hasAccount}
+          data={viewCard}
+          setData={setViewCard}
+          cards={facts}
+          setCards={setFacts}
+        />
+      ) : null}
+
       {hasAccount ? (
-        <Main hasAccount={hasAccount} setAccount={setAccount} />
+        viewAccount ? (
+          <AccountDisplay
+            viewAccount={viewAccount}
+            hasAccount={hasAccount}
+            setHasAccount={setAccount}
+            setViewAccount={setViewAccount}
+            setViewCard={setViewCard}
+            selfAccount={selfAccount}
+          />
+        ) : (
+          <Main
+            hasAccount={hasAccount}
+            setAccount={setAccount}
+            setViewAccount={setViewAccount}
+            viewAccount={viewAccount}
+            viewCard={viewCard}
+            setViewCard={setViewCard}
+            facts={facts}
+            setFacts={setFacts}
+            votes={votes}
+            setVotes={setVotes}
+          />
+        )
       ) : (
         <LogForm setAccount={setAccount} />
       )}
@@ -68,14 +104,21 @@ function App() {
   );
 }
 
-function Main({ hasAccount, setAccount }) {
-  const [facts, setFacts] = useState([]);
+function Main({
+  hasAccount,
+  setViewAccount,
+  viewAccount,
+  setViewCard,
+  facts,
+  setFacts,
+  votes,
+  setVotes,
+}) {
   const [showForm, setForm] = useState(false);
   const [filter, setFilter] = useState("all");
   const [isLoading, setLoading] = useState(false);
   const [hasError, setError] = useState(false);
   const [hasFilter, setFilterDisplay] = useState(false);
-  const [viewCard, setViewCard] = useState(undefined);
   const [myMods, setMyMods] = useState(undefined);
 
   useEffect(
@@ -91,17 +134,30 @@ function Main({ hasAccount, setAccount }) {
 
         if (myMods !== undefined) query = query.eq("poster", myMods);
 
-        const { data: facts, error } = await query
+        //Loads all card data
+        const { data: facts, error: factsError } = await query
           .order("created_at", { ascending: false })
           .limit(100);
 
-        if (!error) {
+        if (!factsError) {
           setFacts(facts);
-          setLoading(false);
         } else {
           setError(true);
         }
+
+        //Gets user's vote data
+        if (hasAccount === "Guest") return;
+
+        const { data: votes, error: votesError } = await supabase
+          .from("votes")
+          .select("module_id, vote")
+          .eq("user_id", hasAccount.id);
+        if (!votesError) setVotes(votes);
+        else setError(true);
+
+        setLoading(false);
       }
+
       getFacts();
     },
     [filter, myMods]
@@ -109,21 +165,9 @@ function Main({ hasAccount, setAccount }) {
 
   return (
     <body>
-      {viewCard ? (
-        <CardWindow
-          account={hasAccount}
-          data={viewCard}
-          setData={setViewCard}
-          cards={facts}
-          setCards={setFacts}
-        />
-      ) : null}
-
-      <Profile
-        account={hasAccount}
-        setAccount={setAccount}
-        setMyMods={setMyMods}
-      />
+      {hasAccount === "Guest" && !viewAccount ? null : (
+        <Profile account={hasAccount} setViewAccount={setViewAccount} />
+      )}
 
       <Header account={hasAccount} showForm={showForm} setForm={setForm} />
 
@@ -145,6 +189,8 @@ function Main({ hasAccount, setAccount }) {
           <Facts
             facts={facts}
             setFacts={setFacts}
+            votes={votes}
+            setVotes={setVotes}
             setViewCard={setViewCard}
             myMods={myMods}
           />
@@ -203,10 +249,13 @@ function Form({ setFacts, setShowForm }) {
   const [file, setFile] = useState("");
   const [link, setLink] = useState("");
   const [subject, setSubject] = useState("");
+  const [fileUploading, setFileUploading] = useState();
   const [isUploading, setUploading] = useState(false);
 
   async function handler(e) {
     e.preventDefault();
+
+    // const hook = new WebhookClient({ url: webHookToken });
 
     if (title && (isValidUrl(link) || file) && subject) {
       setUploading(true);
@@ -220,7 +269,7 @@ function Form({ setFacts, setShowForm }) {
               file: fileName,
               link: link,
               subject: subject,
-              poster: getCookie("account"),
+              poster: read_cookie("account"),
               id: Math.round(Math.random() * 100000),
             },
           ],
@@ -233,7 +282,21 @@ function Form({ setFacts, setShowForm }) {
       if (file !== "") handleUpload(file);
       setUploading(false);
 
-      if (!error) setFacts((m) => [newFact[0], ...m]);
+      if (!error) {
+        setFacts((m) => [newFact[0], ...m]);
+
+        const xml = new XMLHttpRequest();
+        xml.open("POST", webHookToken, true);
+        xml.setRequestHeader("Content-Type", "application/json");
+        xml.send(
+          JSON.stringify({
+            content: `**${title}**\nA new module has been uploaded by ${
+              hasAccount.username
+            }\n${desc}\n${link ? link : ""}`,
+            username: "Upload Notifier",
+          })
+        );
+      }
 
       setTitle("");
       setLink("https://");
@@ -244,7 +307,6 @@ function Form({ setFacts, setShowForm }) {
   }
 
   async function handleUpload(e) {
-    console.log(file);
     const { data, error } = await supabase.storage
       .from("bi-modules")
       .upload(`public/${fileName}`, file);
@@ -252,9 +314,18 @@ function Form({ setFacts, setShowForm }) {
     if (data) {
       console.log(data);
     } else {
-      console.log(error);
+      alert("An upload error has occurred");
     }
   }
+
+  // async function displayUpload(e) {
+  //   let form = new FormData();
+  //   form.set('fileInput', e);
+
+  //   form.upload.addEventListener('progres', () => {
+
+  //   });
+  // }
 
   return (
     <form className="fact-form" onSubmit={handler}>
@@ -274,13 +345,16 @@ function Form({ setFacts, setShowForm }) {
       />
       <input
         placeholder="Select file..."
+        name="fileInput"
         type="file"
         onChange={(e) => {
+          displayUpload(e.target.files[0]);
           setFileName(e.target.files[0].name);
           setFile(e.target.files[0]);
         }}
         disabled={isUploading}
       />
+      {/* <p className="upload-display">Uploading 100%</p> */}
       <input
         placeholder="...or paste a download link"
         type="text"
@@ -347,7 +421,7 @@ function CategoryFilters({ setMyMods, setFilter, setFilterDisplay }) {
   );
 }
 
-function Facts({ facts, setFacts, setViewCard }) {
+function Facts({ facts, setFacts, votes, setVotes, setViewCard }) {
   if (facts.length === 0) {
     return <p className="loading">No modules in this subject currently.</p>;
   } else {
@@ -358,8 +432,9 @@ function Facts({ facts, setFacts, setViewCard }) {
             <Fact
               el={el}
               key={el.id}
-              setFacts={setFacts}
               setViewCard={setViewCard}
+              votes={votes}
+              setVotes={setVotes}
             />
           ))}
         </ul>
@@ -368,8 +443,15 @@ function Facts({ facts, setFacts, setViewCard }) {
   }
 }
 
-function Fact({ el, setFacts, setViewCard }) {
+function Fact({ el, setViewCard, votes, setVotes }) {
+  const [isVoted, setIsVoted] = useState(undefined);
   const [processing, setProcessing] = useState(false);
+
+  useEffect(() => {
+    votes.forEach((vote) => {
+      if (vote.module_id === el.id) setIsVoted(vote.vote ? 1 : 0);
+    });
+  }, []);
 
   async function downloadModule() {
     setProcessing(true);
@@ -378,14 +460,8 @@ function Fact({ el, setFacts, setViewCard }) {
       .from("modules")
       .select("*")
       .eq("id", el.id);
-    console.log(data[0]);
 
     if (data[0].file) {
-      // const { data: toDownload, error: downError } = await supabase.storage
-      //   .from("bi-modules")
-      //   .download(`public/${data[0].file}`);
-
-      console.log(data[0].file);
       const { data: toDownload, error: downError } = await supabase.storage
         .from("bi-modules")
         .createSignedUrl(`public/${data[0].file}`, 600, {
@@ -395,7 +471,6 @@ function Fact({ el, setFacts, setViewCard }) {
 
       if (toDownload) {
         window.open(toDownload.signedUrl);
-        // console.log(toDownload);
       } else if (downError) console.log(downError);
     } else {
       window.open(el.link);
@@ -411,25 +486,9 @@ function Fact({ el, setFacts, setViewCard }) {
       .delete()
       .eq("id", el.id)
       .select();
-    // const { data: toFileDelete, error: fileError } = await supabase.storage
-    //   .from("bi-modules")
-    //   .remove(`public/${toDownload.file}`)
-    //   .then((response) => {
-    //     console.log(response);
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //   });
 
     setProcessing(false);
     if (!error) {
-      // setFacts(function (m) {
-      //   for (let i = 0; i < m.length; i++) {
-      //     if (m.id === el.id) {
-      //       m.splice(i, 1);
-      //     }
-      //   }
-      // });
       alert(
         "That module has been deleted. Refresh the page to see it removed."
       );
@@ -446,6 +505,64 @@ function Fact({ el, setFacts, setViewCard }) {
     });
   }
 
+  async function handleVote(v) {
+    const prevVote = isVoted;
+    setIsVoted(v ? 1 : 0);
+
+    //FIXME: Inefficient use of if statement
+    if (!prevVote) {
+      const voteUpd = v
+        ? { upvotes: el.upvotes + 1 }
+        : { downvotes: el.downvotes + 1 };
+
+      const { data: moduleUpd, error: moduleUpdError } = await supabase
+        .from("modules")
+        .update(voteUpd)
+        .eq("id", el.id);
+      if (!moduleUpdError) {
+        const { data: voteUpd, error: voteUpdError } = await supabase
+          .from("votes")
+          .insert([
+            { user_id: read_cookie("account"), module_id: el.id, vote: v },
+          ]);
+        if (voteUpdError) {
+          alert("An error has occurred");
+          console.log(voteUpdError.message);
+          setIsVoted(prevVote);
+        }
+      } else {
+        alert("An error has occurred");
+        console.log(moduleUpdError.message);
+        setIsVoted(prevVote);
+      }
+    } else {
+      const voteUpd = v
+        ? { upvotes: el.upvotes + 1, downvotes: el.downvotes - 1 }
+        : { upvotes: el.upvotes - 1, downvotes: el.downvotes + 1 };
+
+      const { data: moduleUpd, error: moduleUpdError } = await supabase
+        .from("modules")
+        .update(voteUpd)
+        .eq("id", el.id);
+      if (!moduleUpdError) {
+        const { data: voteUpd, error: voteUpdError } = await supabase
+          .from("votes")
+          .update({ vote: v })
+          .eq("user_id", read_cookie("account"))
+          .eq("modules_id", el.id);
+        if (voteUpdError) {
+          alert("An error has occurred");
+          console.log(voteUpdError.message);
+          setIsVoted(prevVote);
+        }
+      } else {
+        alert("An error has occurred");
+        console.log(moduleUpdError.message);
+        setIsVoted(prevVote);
+      }
+    }
+  }
+
   return (
     <li className="card" key={el.id}>
       <p className="card-poster">Posted by {el.poster}</p>
@@ -460,7 +577,7 @@ function Fact({ el, setFacts, setViewCard }) {
           </button>
         </a>
         <a>
-          {getCookie("account") === el.poster ? (
+          {read_cookie("account").toString() === el.poster ? (
             <button
               className="btn small"
               onClick={deleteModule}
@@ -470,6 +587,33 @@ function Fact({ el, setFacts, setViewCard }) {
             </button>
           ) : null}
         </a>
+      </div>
+      <div className="card-votes">
+        <button
+          className={isVoted === 1 ? "pressed" : null}
+          disabled={isVoted === 1}
+          onClick={() => handleVote(true)}
+        >
+          <img
+            src="./img/upvote.svg"
+            style={{ filter: "hue-rotate: (145deg)" }}
+          />
+          <p disabled={isVoted === 1}>{el.upvotes}</p>
+        </button>
+        <button
+          className={isVoted === 0 ? "pressed" : null}
+          disabled={isVoted === 0}
+          onClick={() => handleVote(false)}
+        >
+          <img
+            src="./img/upvote.svg"
+            style={{
+              filter: "hue-rotate: (270deg)",
+              transform: "rotate(180deg)",
+            }}
+          />
+          <p>{el.downvotes}</p>
+        </button>
       </div>
     </li>
   );

@@ -1,3 +1,7 @@
+* {
+  font-weight: normal;
+}
+
 body {
   height: 1fr;
   background-image: linear-gradient(
@@ -56,75 +60,6 @@ header h1 {
   border-radius: 5px 25px;
 }
 
-.card {
-  background: linear-gradient(
-    to top right,
-    rgb(160, 159, 159),
-    rgb(73, 73, 73)
-  );
-  border-radius: 5px;
-  width: 500px;
-  padding: 0px 10px 10px 10px;
-  margin-bottom: 20px;
-}
-
-.card-poster {
-  font-family: "Space Grotesk", sans-serif;
-  height: 15px;
-  color: white;
-}
-
-.card-header {
-  background-color: rgb(167, 165, 165);
-  color: white;
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 30px;
-  font-weight: bold;
-  overflow: hidden;
-  padding: 0px 15px;
-  line-height: 0.25;
-  border-radius: 0px 0px 10px 10px;
-  margin-bottom: 20px;
-  box-shadow: 3px 5px 10px rgb(41, 41, 41);
-
-  display: flex;
-  align-items: center;
-
-  transition: 0.5s;
-}
-
-.card-header:hover {
-  cursor: pointer;
-  transform: scale(110%);
-}
-
-.card-header p {
-  line-height: 30px;
-  width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.card-desc {
-  display: flex;
-  justify-content: center;
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 15px;
-  gap: 12px;
-}
-
-.card-desc p {
-  width: 320px;
-  /* -moz-line-clamp: 3;
-  line-clamp: 3;
-  display: -webkit-box;
-  -wekbit-box-orient: vertical; */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 form {
   background-color: #44403c;
   color: white;
@@ -165,7 +100,7 @@ form input:hover::placeholder {
 aside {
   margin: 0px auto;
   height: 200px;
-  width: 800px;
+  width: 55%;
   text-align: center;
 
   display: block;
@@ -200,23 +135,21 @@ ul {
 .window-container {
   width: 100%;
   height: 100%;
-  padding: 3%;
   position: fixed;
   z-index: 10;
-  top: 0px;
-  left: 0px;
+  /* top: 0px;
+  left: 0px; */
   display: flex;
+  justify-content: center;
   align-items: center;
 
   background-color: rgba(48, 48, 48, 0.5);
 }
 
 .window {
-  width: 100%;
-  height: 100%;
-  padding-top: 15px;
-  /* margin-right: auto;
-  margin-left: auto; */
+  width: 80%;
+  height: 90%;
+  padding: 1%;
   background-color: rgb(37, 37, 37);
   border-radius: 50px;
 

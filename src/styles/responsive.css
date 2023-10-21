@@ -2,6 +2,18 @@
   ul {
     grid-template-columns: 1fr;
   }
+
+  aside {
+    width: 75%;
+  }
+
+  .dropdowns select {
+    width: 25%;
+  }
+
+  .dropdowns div {
+    width: 25%;
+  }
 }
 
 @media (max-width: 650px) {
@@ -10,14 +22,38 @@
   }
 
   aside {
-    width: 80vw;
+    width: 80%;
     height: 350px;
     margin: 0px auto;
+  }
+
+  .dropdowns {
+    flex-direction: column;
+    gap: 15%;
+  }
+
+  .dropdowns div,
+  .dropdowns select {
+    width: 50%;
   }
 }
 
 @media (max-width: 400px) {
   header {
     flex-direction: column;
+  }
+
+  aside {
+    margin-bottom: 15%;
+  }
+
+  .recovery .btn-container {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 350px) {
+  aside {
+    margin-bottom: 25%;
   }
 }
